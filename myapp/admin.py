@@ -1,6 +1,10 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import User, GenerationRequest, Track, ShareLink
+
+from myapp.models.user import User
+from myapp.models.generation_request import GenerationRequest
+from myapp.models.track import Track
+from myapp.models.share_link import ShareLink
 
 
 # Inline Admin Classes
