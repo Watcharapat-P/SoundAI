@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+
+{% block title %}Generation Request - SoundAI{% endblock %}
+
+{% block content %}
+<style>
+  .detail-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 40px 20px;
+    margin: -20px -15px 30px -15px;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .detail-header h1 { margin: 0; font-size: 2.5em; }
+  .detail-header p { margin: 10px 0 0 0; opacity: 0.9; }
+
+  .detail-container { max-width: 800px; margin: 0 auto; }
+
+  .info-card {
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+    border: 1px solid #f0f0f0;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid #eee;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .info-row:last-child { border-bottom: none; }
+
+  .info-label {
+    font-weight: 600;
+    color: #667eea;
+    min-width: 150px;
+  }
+
+  .info-value { color: #333; text-align: right; }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .back-link:hover { text-decoration: underline; }
+
+  .badge-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .badge-item {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 15px;
+    font-size: 0.9em;
+    font-weight: 600;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .track-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 12px;
+  }
+
+  .track-row {
+    background: white;
+    padding: 14px;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .track-row-info { flex: 1; min-width: 200px; }
+  .track-row-title { font-weight: 600; color: #333; }
+  .track-row-meta { font-size: 0.85em; color: #999; }
+
+  .status-badge {
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.85em;
+  }
+
+  .status-completed { background: #d4edda; color: #155724; }
+  .status-pending { background: #fff3cd; color: #856404; }
+  .status-failed { background: #f8d7da; color: #721c24; }
+</style>
+
+<div class="detail-header">
+  <h1>📋 Generation Request</h1>
+  <p>Generation parameters and details</p>
+</div>
+
+<div class="detail-container">
+  <a href="{% url 'request-list' %}" class="back-link">← Back to Requests</a>
+
+  <div class="info-card">
+    {% if request_obj.song_title %}
+      <div class="info-row">
+        <span class="info-label">Song Title</span>
+        <span class="info-value">{{ request_obj.song_title }}</span>
+      </div>
+    {% endif %}
+
+    <div class="info-row">
+      <span class="info-label">Parameters</span>
+      <div class="badge-group">
+        <span class="badge-item">🎉 {{ request_obj.occasion|title }}</span>
+        <span class="badge-item">😊 {{ request_obj.mood|title }}</span>
+        <span class="badge-item">🎵 {{ request_obj.genre|title }}</span>
+      </div>
+    </div>
+
+    <div class="info-row">
+      <span class="info-label">Duration (Requested)</span>
+      <span class="info-value">{{ request_obj.requested_duration_seconds }} seconds</span>
+    </div>
+
+    <div class="info-row">
+      <span class="info-label">Owner</span>
+      <span class="info-value">
+        <a href="{% url 'user-detail' request_obj.owner.id %}">{{ request_obj.owner.email }}</a>
+      </span>
+    </div>
+
+    <div class="info-row">
+      <span class="info-label">Created</span>
+      <span class="info-value">{{ request_obj.created_at|date:"F j, Y \a\t g:i A" }}</span>
+    </div>
+  </div>
+
+  <div class="info-card">
+    <h5>🎵 Generated Track</h5>
+    <div class="track-section">
+      {% if track %}
+        <div class="track-row">
+          <div class="track-row-info">
+            <div class="track-row-title">{{ track.title|default:"Untitled" }}</div>
+            <div class="track-row-meta">
+              {{ track.duration_seconds }}s • Created {{ track.created_at|date:"M d, Y" }}
+            </div>
+          </div>
+          <span class="status-badge status-{{ track.status }}">{{ track.status|upper }}</span>
+          <a href="{% url 'track-detail' track.id %}" class="btn btn-sm btn-info">View</a>
+        </div>
+      {% else %}
+        <p style="color: #999; margin: 0;">No tracks generated yet for this request.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="info-card">
+    <div class="action-buttons">
+      <a href="{% url 'request-list' %}" class="btn btn-secondary">← Back to Requests</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

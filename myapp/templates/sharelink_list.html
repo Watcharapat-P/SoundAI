@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}Share Links - SoundAI{% endblock %}
+
+{% block content %}
+<style>
+  .page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 40px 20px;
+    margin: -20px -15px 30px -15px;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .page-header h1 { margin: 0; font-size: 2.5em; }
+  .page-header p { margin: 10px 0 0 0; opacity: 0.9; }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .back-link:hover { text-decoration: underline; }
+
+  .create-link-section {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+  }
+
+  .create-link-section h5 { margin-top: 0; color: #333; }
+
+  .form-group label { font-weight: 600; color: #333; }
+
+  .btn-create {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border: none;
+    font-weight: 600;
+    width: 100%;
+    padding: 12px;
+  }
+
+  .btn-create:hover {
+    background: linear-gradient(135deg, #218838 0%, #17a2b8 100%);
+    color: white;
+  }
+
+  .alert-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+  }
+
+  .sharelink-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 20px;
+  }
+
+  .sharelink-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+
+  .sharelink-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  .sharelink-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px;
+  }
+
+  .sharelink-title { font-size: 1.1em; font-weight: bold; margin: 0; }
+
+  .sharelink-body { padding: 18px; }
+
+  .sharelink-info {
+    margin: 10px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+  }
+
+  .sharelink-label {
+    color: #667eea;
+    font-weight: 600;
+    font-size: 0.78em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .sharelink-value {
+    color: #333;
+    word-break: break-all;
+    font-family: monospace;
+    font-size: 0.85em;
+  }
+
+  .sharelink-url-box {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 8px;
+    border-radius: 4px;
+    margin: 8px 0;
+    display: flex;
+    gap: 8px;
+  }
+
+  .sharelink-url-box input {
+    flex: 1;
+    border: none;
+    padding: 0;
+    font-family: monospace;
+    font-size: 0.8em;
+    background: transparent;
+  }
+
+  .btn-copy {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8em;
+  }
+
+  .btn-copy:hover { background: #5568d3; }
+
+  .sharelink-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .sharelink-actions a, .sharelink-actions button {
+    flex: 1;
+    font-size: 0.85em;
+  }
+
+  .empty-state { text-align: center; padding: 60px 20px; }
+  .empty-state h2 { color: #999; }
+  .empty-state p { color: #bbb; }
+
+  .status-active { background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-size: 0.85em; font-weight: 600; }
+  .status-revoked { background: #f8d7da; color: #721c24; padding: 4px 8px; border-radius: 4px; font-size: 0.85em; font-weight: 600; }
+</style>
+
+<div class="page-header">
+  <h1>🔗 Share Links</h1>
+  <p>Create and manage public share links for your tracks</p>
+</div>
+
+<a href="{% url 'home' %}" class="back-link">← Back Home</a>
+
+{% if success %}
+  <div class="alert-success">{{ success }}</div>
+{% endif %}
+
+<div class="create-link-section">
+  <h5>✨ Create New Share Link</h5>
+  <form method="post">
+    {% csrf_token %}
+    <div class="form-group">
+      <label for="track">Select a Track</label>
+      <select class="form-control" id="track" name="track_id" required>
+        <option value="">-- Select a Track --</option>
+        {% for track in available_tracks %}
+          <option value="{{ track.id }}">{{ track.title|default:"Untitled" }} ({{ track.duration_seconds }}s)</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn-create">🔗 Create Share Link</button>
+  </form>
+</div>
+
+{% if share_links %}
+  <div class="sharelink-grid">
+    {% for sharelink in share_links %}
+      <div class="sharelink-card">
+        <div class="sharelink-header">
+          <p class="sharelink-title">{{ sharelink.track.title|default:"Untitled"|truncatewords:4 }}</p>
+        </div>
+        <div class="sharelink-body">
+          <div class="sharelink-info">
+            <div class="sharelink-label">🎵 Track</div>
+            <div class="sharelink-value">{{ sharelink.track.title|default:"Untitled" }}</div>
+          </div>
+
+          <div class="sharelink-info">
+            <div class="sharelink-label">📋 Share URL</div>
+            <div class="sharelink-url-box">
+              <input type="text" value="{{ site_url }}{% url 'public-share' sharelink.token %}" readonly>
+              <button class="btn-copy" type="button" onclick="copyToClipboard(this)">📋</button>
+            </div>
+          </div>
+
+          <div class="sharelink-info">
+            <div class="sharelink-label">Status</div>
+            {% if sharelink.is_valid %}
+              <span class="status-active">ACTIVE</span>
+            {% else %}
+              <span class="status-revoked">REVOKED</span>
+            {% endif %}
+          </div>
+
+          <div class="sharelink-info">
+            <div class="sharelink-label">Created</div>
+            <div class="sharelink-value">{{ sharelink.created_at|date:"M d, Y" }}</div>
+          </div>
+
+          <div class="sharelink-actions">
+            <a href="{% url 'sharelink-detail' sharelink.id %}" class="btn btn-sm btn-info">👁️ View</a>
+            <a href="{% url 'sharelink-revoke' sharelink.id %}" class="btn btn-sm btn-danger"
+               onclick="return confirm('Revoke this share link?');">🗑️ Revoke</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">
+    <h2>No share links yet</h2>
+    <p>Create a share link above to share your music with others.</p>
+  </div>
+{% endif %}
+
+<script>
+  function copyToClipboard(button) {
+    const input = button.previousElementSibling;
+    input.select();
+    document.execCommand('copy');
+    const original = button.textContent;
+    button.textContent = '✓';
+    setTimeout(() => { button.textContent = original; }, 2000);
+  }
+</script>
+{% endblock %}

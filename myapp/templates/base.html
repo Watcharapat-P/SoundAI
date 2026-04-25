@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>
+    {% block title %}
+      SoundAI - Generate Music with AI
+    {% endblock %}
+  </title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f5f7fa;
+      color: #333;
+    }
+
+    .navbar {
+      background: white !important;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .navbar-brand {
+      font-size: 1.5em;
+      font-weight: bold;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .navbar-brand:hover {
+      -webkit-text-fill-color: transparent;
+      text-decoration: none;
+    }
+
+    .navbar-nav .nav-link {
+      margin: 0 10px;
+      font-weight: 500;
+      color: #333 !important;
+      transition: all 0.3s;
+    }
+
+    .navbar-nav .nav-link:hover {
+      color: #667eea !important;
+    }
+
+    .navbar-nav .nav-link.active {
+      color: #667eea !important;
+      border-bottom: 2px solid #667eea;
+    }
+
+    .container {
+      background: white;
+      border-radius: 8px;
+      padding: 20px 15px;
+      margin: 20px auto;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    footer {
+      background: #2c3e50;
+      color: white;
+      padding: 30px 0;
+      margin-top: 50px;
+      text-align: center;
+    }
+
+    footer a {
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    .btn-primary {
+      background: var(--primary-gradient);
+      border: none;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #5568d3 0%, #6a3f91 100%);
+    }
+
+    /* Auth area in navbar */
+    .navbar-auth {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: 16px;
+    }
+
+    .navbar-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #f5f7fa;
+    }
+
+    .navbar-user img {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .navbar-user-fallback {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary-gradient);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.85em;
+    }
+
+    .navbar-user-name {
+      font-weight: 500;
+      color: #333;
+      font-size: 0.95em;
+      max-width: 140px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .navbar-admin-badge {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5253 100%);
+      color: white;
+      font-size: 0.65em;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 3px 7px;
+      border-radius: 4px;
+    }
+
+    .btn-signin {
+      background: var(--primary-gradient);
+      color: white !important;
+      padding: 6px 18px !important;
+      border-radius: 6px;
+      font-weight: 500;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-signin:hover {
+      color: white !important;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      text-decoration: none;
+    }
+
+    .btn-logout {
+      color: #666 !important;
+      font-size: 0.9em;
+      padding: 6px 12px !important;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .btn-logout:hover {
+      color: #d33 !important;
+      border-color: #d33;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-light">
+    <a class="navbar-brand" href="/">🎵 SoundAI</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" 
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ml-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="/">🏠 Home</a>
+        </li>
+        {% if current_user %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'track-list' %}">🎵 My Tracks</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'request-list' %}">📋 Requests</a>
+          </li>
+          {% if is_admin %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'user-list' %}">👥 Users</a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'user-detail' current_user.id %}">👤 My Profile</a>
+            </li>
+          {% endif %}
+        {% endif %}
+      </ul>
+
+      <div class="navbar-auth">
+        {% if current_user %}
+          <div class="navbar-user" title="{{ current_user.email }}">
+            {% if current_user.picture %}
+              <img src="{{ current_user.picture }}" alt="">
+            {% else %}
+              <div class="navbar-user-fallback">
+                {{ current_user.name|default:current_user.email|slice:":1"|upper }}
+              </div>
+            {% endif %}
+            <span class="navbar-user-name">
+              {{ current_user.name|default:current_user.email }}
+            </span>
+            {% if is_admin %}
+              <span class="navbar-admin-badge" title="Administrator">ADMIN</span>
+            {% endif %}
+          </div>
+          <a href="{% url 'logout' %}" class="nav-link btn-logout">Sign out</a>
+        {% else %}
+          <a href="{% url 'login' %}" class="nav-link btn-signin">Sign in</a>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container">
+    {% block content %}{% endblock %}
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2026 SoundAI. Generate unique music with AI.</p>
+    <p><small>Powered by Django & Suno API</small></p>
+  </footer>
+
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

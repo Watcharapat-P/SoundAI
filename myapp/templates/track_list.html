@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %}My Tracks - SoundAI{% endblock %}
+
+{% block content %}
+<style>
+  .page-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 40px 20px;
+    margin: -20px -15px 30px -15px;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .page-header h1 {
+    margin: 0;
+    font-size: 2.5em;
+  }
+
+  .page-header p {
+    margin: 10px 0 0 0;
+    opacity: 0.9;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .back-link:hover { text-decoration: underline; }
+
+  .filter-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-section label {
+    margin: 0;
+    font-weight: 600;
+    margin-right: 8px;
+  }
+
+  .track-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+
+  .track-grid-item {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s, box-shadow 0.3s;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .track-grid-item:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  }
+
+  .track-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 18px;
+  }
+
+  .track-title {
+    font-size: 1.15em;
+    font-weight: bold;
+    margin: 0;
+  }
+
+  .track-content {
+    padding: 18px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .track-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 8px 0;
+    font-size: 0.9em;
+    color: #666;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-weight: 600;
+    font-size: 0.8em;
+  }
+
+  .status-completed { background-color: #d4edda; color: #155724; }
+  .status-pending { background-color: #fff3cd; color: #856404; }
+  .status-failed { background-color: #f8d7da; color: #721c24; }
+
+  .track-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 12px;
+  }
+
+  .track-actions .btn {
+    flex: 1;
+    font-size: 0.85em;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+  }
+
+  .empty-state h2 { color: #999; margin-bottom: 10px; }
+  .empty-state p { color: #bbb; margin-bottom: 20px; }
+</style>
+
+<div class="page-header">
+  <h1>🎵 My Tracks</h1>
+  <p>Manage and listen to your generated music</p>
+</div>
+
+<a href="{% url 'home' %}" class="back-link">← Back Home</a>
+
+<div class="filter-section">
+  <label>Filter by Status:</label>
+  <button class="btn btn-sm btn-outline-dark" onclick="filterTracks('all')">All</button>
+  <button class="btn btn-sm btn-outline-success" onclick="filterTracks('completed')">Completed</button>
+  <button class="btn btn-sm btn-outline-warning" onclick="filterTracks('pending')">Pending</button>
+  <button class="btn btn-sm btn-outline-danger" onclick="filterTracks('failed')">Failed</button>
+</div>
+
+{% if tracks %}
+  <div class="track-grid">
+    {% for track in tracks %}
+      <div class="track-grid-item" data-status="{{ track.status }}">
+        <div class="track-header">
+          <div class="track-title">{{ track.title|default:"Untitled"|truncatewords:5 }}</div>
+        </div>
+        <div class="track-content">
+          <div class="track-info">
+            <span>📊 {{ track.duration_seconds }}s</span>
+            <span class="status-badge status-{{ track.status }}">{{ track.status|upper }}</span>
+          </div>
+
+          <div class="track-info">
+            <span>📅 {{ track.created_at|date:"M d, Y" }}</span>
+          </div>
+
+          {% if track.audio_url %}
+            <audio style="width: 100%; margin: 12px 0; height: 32px;" controls>
+              <source src="{{ track.audio_url }}" type="audio/mpeg">
+            </audio>
+          {% endif %}
+
+          <div class="track-actions">
+            <a href="{% url 'track-detail' track.id %}" class="btn btn-sm btn-info">👁️ View</a>
+            <a href="{% url 'sharelink-list' %}" class="btn btn-sm btn-success">🔗 Share</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="empty-state">
+    <h2>No tracks yet</h2>
+    <p>Create your first track from the home page.</p>
+    <a href="{% url 'home' %}" class="btn btn-primary">🏠 Go Home</a>
+  </div>
+{% endif %}
+
+<script>
+  function filterTracks(status) {
+    document.querySelectorAll('.track-grid-item').forEach(item => {
+      item.style.display = (status === 'all' || item.dataset.status === status) ? '' : 'none';
+    });
+  }
+</script>
+{% endblock %}

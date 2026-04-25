@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ user.email }} - SoundAI{% endblock %}
+
+{% block content %}
+<style>
+  .detail-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 40px 20px;
+    margin: -20px -15px 30px -15px;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .detail-header h1 { margin: 0; font-size: 2em; word-break: break-all; }
+  .detail-header p { margin: 10px 0 0 0; opacity: 0.9; }
+
+  .detail-container { max-width: 900px; margin: 0 auto; }
+
+  .info-card {
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+    border: 1px solid #f0f0f0;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid #eee;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .info-row:last-child { border-bottom: none; }
+
+  .info-label {
+    font-weight: 600;
+    color: #667eea;
+    min-width: 150px;
+  }
+
+  .info-value {
+    color: #333;
+    word-break: break-all;
+    text-align: right;
+  }
+
+  .storage-bar {
+    background: #e9ecef;
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 10px 0;
+    max-width: 400px;
+  }
+
+  .storage-fill {
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    height: 100%;
+    transition: width 0.3s;
+  }
+
+  .storage-label { font-size: 0.95em; color: #666; margin-bottom: 5px; }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin: 0 0 20px 0;
+  }
+
+  .stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .stat-value { font-size: 2em; font-weight: bold; }
+  .stat-label { font-size: 0.9em; opacity: 0.9; }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .back-link:hover { text-decoration: underline; }
+
+  .tracks-table { width: 100%; border-collapse: collapse; }
+  .tracks-table thead { background: #f8f9fa; }
+  .tracks-table th, .tracks-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+  }
+  .tracks-table tbody tr:hover { background: #f8f9fa; }
+
+  .empty-tracks { text-align: center; padding: 40px; color: #999; }
+
+  .status-pill { padding: 4px 10px; border-radius: 12px; font-size: 0.85em; font-weight: 600; }
+  .status-pill.completed { background: #d4edda; color: #155724; }
+  .status-pill.pending { background: #fff3cd; color: #856404; }
+  .status-pill.failed { background: #f8d7da; color: #721c24; }
+</style>
+
+<div class="detail-header">
+  <h1>👤 {{ user.email }}</h1>
+  <p>User Profile Information</p>
+</div>
+
+<div class="detail-container">
+  <a href="{% url 'user-list' %}" class="back-link">← Back to Users</a>
+
+  <div class="info-card">
+    <div class="info-row">
+      <span class="info-label">Email Address</span>
+      <span class="info-value">{{ user.email }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Google ID</span>
+      <span class="info-value" style="font-size: 0.9em;">{{ user.google_id }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Member Since</span>
+      <span class="info-value">{{ user.created_at|date:"F j, Y \a\t g:i A" }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Last Updated</span>
+      <span class="info-value">{{ user.updated_at|date:"F j, Y \a\t g:i A" }}</span>
+    </div>
+  </div>
+
+  <div class="info-card">
+    <h5>💾 Storage Usage</h5>
+    <div class="storage-label">
+      {{ user.total_storage_used|floatformat:2 }} MB / 500 MB used
+    </div>
+    <div class="storage-bar">
+      <div class="storage-fill"
+           style="width: {% widthratio user.total_storage_used 500 100 %}%"></div>
+    </div>
+    <small style="color: #999;">
+      {% widthratio user.total_storage_used 500 100 %}% of storage quota used
+    </small>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-value">{{ generation_requests_count }}</div>
+      <div class="stat-label">Generation Requests</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ tracks_count }}</div>
+      <div class="stat-label">Generated Tracks</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">{{ share_links_count }}</div>
+      <div class="stat-label">Share Links</div>
+    </div>
+  </div>
+
+  <div class="info-card">
+    <h5>🎵 Generated Tracks</h5>
+    {% if user_tracks %}
+      <div class="table-responsive">
+        <table class="tracks-table">
+          <thead>
+            <tr>
+              <th>Track Title</th>
+              <th>Duration</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for track in user_tracks %}
+              <tr>
+                <td>{{ track.title|default:"Untitled"|truncatewords:4 }}</td>
+                <td>{{ track.duration_seconds }}s</td>
+                <td><span class="status-pill {{ track.status }}">{{ track.status|upper }}</span></td>
+                <td>{{ track.created_at|date:"M d, Y" }}</td>
+                <td>
+                  <a href="{% url 'track-detail' track.id %}" class="btn btn-sm btn-info">View</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-tracks">
+        <p>This user has not generated any tracks yet.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="info-card">
+    <a href="{% url 'user-list' %}" class="btn btn-secondary">← Back to Users</a>
+  </div>
+</div>
+{% endblock %}

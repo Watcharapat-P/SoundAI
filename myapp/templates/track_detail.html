@@ -1,0 +1,188 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ track.title }} - SoundAI{% endblock %}
+
+{% block content %}
+<style>
+  .detail-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 40px 20px;
+    margin: -20px -15px 30px -15px;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .detail-header h1 { margin: 0; font-size: 2.5em; }
+  .detail-header p { margin: 10px 0 0 0; opacity: 0.9; }
+
+  .detail-container { max-width: 800px; margin: 0 auto; }
+
+  .info-card {
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+    border: 1px solid #f0f0f0;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .info-row:last-child { border-bottom: none; }
+
+  .info-label {
+    font-weight: 600;
+    color: #667eea;
+    min-width: 150px;
+  }
+
+  .info-value {
+    color: #333;
+    text-align: right;
+    word-break: break-word;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9em;
+  }
+
+  .status-completed { background-color: #d4edda; color: #155724; }
+  .status-pending { background-color: #fff3cd; color: #856404; }
+  .status-failed { background-color: #f8d7da; color: #721c24; }
+
+  .audio-section { text-align: center; }
+
+  .audio-player { width: 100%; max-width: 500px; margin: 20px auto; display: block; }
+
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .back-link a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .back-link { margin-bottom: 20px; }
+
+  .badge-tag {
+    background: #e9ecef;
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 0.9em;
+    color: #495057;
+  }
+
+  .request-details {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 12px;
+  }
+</style>
+
+<div class="detail-header">
+  <h1>{{ track.title|default:"Untitled Track" }}</h1>
+  <p>Track Details</p>
+</div>
+
+<div class="detail-container">
+  <div class="back-link">
+    <a href="{% url 'track-list' %}">← Back to Tracks</a>
+  </div>
+
+  <div class="info-card">
+    <div class="info-row">
+      <span class="info-label">Status</span>
+      <span class="info-value">
+        <span class="status-badge status-{{ track.status }}">{{ track.status|upper }}</span>
+      </span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Duration</span>
+      <span class="info-value">{{ track.duration_seconds }} seconds</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Created</span>
+      <span class="info-value">{{ track.created_at|date:"M d, Y \a\t H:i:s" }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Last Updated</span>
+      <span class="info-value">{{ track.updated_at|date:"M d, Y \a\t H:i:s" }}</span>
+    </div>
+    {% if track.task_id %}
+      <div class="info-row">
+        <span class="info-label">Task ID</span>
+        <span class="info-value" style="font-size: 0.9em; word-break: break-all;">{{ track.task_id }}</span>
+      </div>
+    {% endif %}
+  </div>
+
+  {% if track.audio_url and track.status == "completed" %}
+    <div class="info-card audio-section">
+      <h5 style="margin-bottom: 20px;">🎧 Listen to Your Track</h5>
+      <audio class="audio-player" controls>
+        <source src="{{ track.audio_url }}" type="audio/mpeg">
+        Your browser does not support the audio element.
+      </audio>
+      <div>
+        <a href="{{ track.audio_url }}" download class="btn btn-primary" style="margin-top: 15px;">
+          ⬇️ Download Track
+        </a>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if track.generation_request %}
+    <div class="info-card">
+      <h5 style="margin-bottom: 15px;">📋 Generation Parameters</h5>
+      <div class="request-details">
+        {% if track.generation_request.song_title %}
+          <div class="info-row">
+            <span class="info-label">Song Title (Requested)</span>
+            <span class="info-value">{{ track.generation_request.song_title }}</span>
+          </div>
+        {% endif %}
+        <div class="info-row">
+          <span class="info-label">Occasion</span>
+          <span class="info-value"><span class="badge-tag">🎉 {{ track.generation_request.occasion|title }}</span></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Mood</span>
+          <span class="info-value"><span class="badge-tag">😊 {{ track.generation_request.mood|title }}</span></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Genre</span>
+          <span class="info-value"><span class="badge-tag">🎵 {{ track.generation_request.genre|title }}</span></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Requested Duration</span>
+          <span class="info-value">{{ track.generation_request.requested_duration_seconds }} seconds</span>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="info-card">
+    <div class="action-buttons">
+      <a href="{% url 'track-list' %}" class="btn btn-secondary">← Back to Tracks</a>
+      <a href="{% url 'sharelink-list' %}" class="btn btn-success">🔗 Create Share Link</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

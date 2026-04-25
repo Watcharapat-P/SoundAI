@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign in to SoundAI{% endblock %}
+
+{% block content %}
+<style>
+  /* Override container so login can be a centered card */
+  .container {
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .login-wrapper {
+    min-height: calc(100vh - 220px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  .login-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.15);
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 440px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .login-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+
+  .login-logo {
+    font-size: 3em;
+    margin-bottom: 8px;
+  }
+
+  .login-title {
+    font-size: 1.8em;
+    font-weight: 700;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .login-subtitle {
+    color: #666;
+    margin-bottom: 32px;
+    font-size: 1em;
+  }
+
+  .google-signin-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 20px;
+    background: white;
+    color: #3c4043;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  .google-signin-btn:hover {
+    background: #f8f9fa;
+    box-shadow: 0 1px 3px rgba(60, 64, 67, 0.15);
+    color: #3c4043;
+    text-decoration: none;
+    transform: translateY(-1px);
+  }
+
+  .google-signin-btn:active {
+    background: #f1f3f4;
+  }
+
+  .google-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .login-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #999;
+    font-size: 0.85em;
+    margin: 28px 0;
+  }
+
+  .login-divider::before,
+  .login-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e0e0e0;
+  }
+
+  .login-features {
+    margin-top: 32px;
+    text-align: left;
+  }
+
+  .feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    color: #555;
+    font-size: 0.95em;
+  }
+
+  .feature-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.9em;
+  }
+
+  .login-footer {
+    margin-top: 32px;
+    color: #888;
+    font-size: 0.85em;
+  }
+
+  .login-footer a {
+    color: #667eea;
+    text-decoration: none;
+  }
+
+  .login-footer a:hover {
+    text-decoration: underline;
+  }
+
+  .alert-message {
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+  }
+
+  .alert-error {
+    background: #fde8e8;
+    color: #9b1c1c;
+    border: 1px solid #fbd5d5;
+  }
+
+  .alert-warning {
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fef3c7;
+  }
+</style>
+
+<div class="login-wrapper">
+  <div class="login-card">
+    <div class="login-logo">🎵</div>
+    <h1 class="login-title">Welcome to SoundAI</h1>
+    <p class="login-subtitle">Sign in to start generating music with AI</p>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert-message alert-{{ message.tags|default:'error' }}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    {% if not google_configured %}
+      <div class="alert-message alert-warning">
+        <strong>⚠️ Google OAuth not configured.</strong><br>
+        Set <code>GOOGLE_CLIENT_ID</code> and <code>GOOGLE_CLIENT_SECRET</code>
+        in your <code>.env</code> file.
+      </div>
+    {% endif %}
+
+    <a href="{% url 'google-login' %}" class="google-signin-btn">
+      <svg class="google-icon" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12 c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24 c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
+        <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039 l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
+        <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36 c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
+        <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571 c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
+      </svg>
+      <span>Sign in with Google</span>
+    </a>
+
+    <div class="login-divider">What you'll get</div>
+
+    <div class="login-features">
+      <div class="feature-item">
+        <div class="feature-icon">🎼</div>
+        <span>Generate unique AI-powered tracks</span>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">📚</div>
+        <span>Build your private music library</span>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🔗</div>
+        <span>Share songs with secure public links</span>
+      </div>
+    </div>
+
+    <div class="login-footer">
+      By signing in, you agree to SoundAI's terms of service.<br>
+      <a href="/">← Back to home</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+
+{% block title %}Share Link - SoundAI{% endblock %}
+
+{% block content %}
+<style>
+  .detail-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 40px 20px;
+    margin: -20px -15px 30px -15px;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .detail-header h1 { margin: 0; font-size: 2.5em; }
+  .detail-header p { margin: 10px 0 0 0; opacity: 0.9; }
+
+  .detail-container { max-width: 800px; margin: 0 auto; }
+
+  .info-card {
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 20px;
+    border: 1px solid #f0f0f0;
+  }
+
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 1px solid #eee;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .info-row:last-child { border-bottom: none; }
+
+  .info-label {
+    font-weight: 600;
+    color: #667eea;
+    min-width: 150px;
+  }
+
+  .info-value {
+    color: #333;
+    word-break: break-all;
+    text-align: right;
+  }
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 20px;
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .back-link:hover { text-decoration: underline; }
+
+  .share-url-box {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+  }
+
+  .share-url-label {
+    font-weight: 600;
+    color: #667eea;
+    margin-bottom: 10px;
+    font-size: 0.9em;
+    text-transform: uppercase;
+  }
+
+  .share-url-input-group {
+    display: flex;
+    gap: 8px;
+  }
+
+  .share-url-input-group input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.9em;
+  }
+
+  .btn-copy {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .copy-feedback {
+    display: none;
+    color: #28a745;
+    margin-top: 10px;
+    font-weight: 600;
+  }
+
+  .quick-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .quick-actions > a, .quick-actions > button { flex: 1; min-width: 150px; }
+
+  .status-active {
+    display: inline-block;
+    background: #d4edda;
+    color: #155724;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+
+  .status-revoked {
+    display: inline-block;
+    background: #f8d7da;
+    color: #721c24;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+
+  .track-preview {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+  }
+
+  .track-preview-title { font-size: 1.3em; font-weight: bold; margin: 0 0 10px 0; }
+
+  .track-preview-info {
+    display: flex;
+    gap: 20px;
+    opacity: 0.9;
+    flex-wrap: wrap;
+  }
+</style>
+
+<div class="detail-header">
+  <h1>🔗 Share Link Details</h1>
+  <p>Manage and share this track</p>
+</div>
+
+<div class="detail-container">
+  <a href="{% url 'sharelink-list' %}" class="back-link">← Back to Share Links</a>
+
+  <div class="info-card">
+    <div class="share-url-box">
+      <div class="share-url-label">🔗 Public Share Link</div>
+      <div class="share-url-input-group">
+        <input type="text" id="shareUrl" value="{{ site_url }}{% url 'public-share' sharelink.token %}" readonly>
+        <button class="btn-copy" type="button" onclick="copyShareUrl()">📋 Copy</button>
+      </div>
+      <div class="copy-feedback" id="copyFeedback">✓ Copied to clipboard!</div>
+    </div>
+  </div>
+
+  <div class="info-card">
+    <h5>🎵 Track Information</h5>
+    <div class="track-preview">
+      <p class="track-preview-title">{{ sharelink.track.title|default:"Untitled" }}</p>
+      <div class="track-preview-info">
+        <span>⏱️ {{ sharelink.track.duration_seconds }}s</span>
+        <span>📅 {{ sharelink.track.created_at|date:"M d, Y" }}</span>
+        <span>{{ sharelink.track.status|upper }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-card">
+    <div class="info-row">
+      <span class="info-label">Token</span>
+      <span class="info-value" style="font-size: 0.85em; font-family: monospace;">{{ sharelink.token }}</span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Status</span>
+      <span class="info-value">
+        {% if sharelink.is_valid %}
+          <span class="status-active">ACTIVE</span>
+        {% else %}
+          <span class="status-revoked">REVOKED</span>
+        {% endif %}
+      </span>
+    </div>
+    <div class="info-row">
+      <span class="info-label">Created</span>
+      <span class="info-value">{{ sharelink.created_at|date:"F j, Y \a\t g:i A" }}</span>
+    </div>
+    {% if sharelink.expires_at %}
+      <div class="info-row">
+        <span class="info-label">Expires</span>
+        <span class="info-value">{{ sharelink.expires_at|date:"F j, Y \a\t g:i A" }}</span>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="info-card">
+    <div class="quick-actions">
+      <a href="{% url 'public-share' sharelink.token %}" class="btn btn-info" target="_blank">
+        👁️ Preview Link
+      </a>
+      <a href="{% url 'track-detail' sharelink.track.id %}" class="btn btn-info">
+        🎵 View Track
+      </a>
+      <a href="{% url 'sharelink-revoke' sharelink.id %}" class="btn btn-danger"
+         onclick="return confirm('Revoke this share link?');">
+        🗑️ Revoke Link
+      </a>
+    </div>
+  </div>
+
+  <div class="info-card">
+    <a href="{% url 'sharelink-list' %}" class="btn btn-secondary btn-block">
+      ← Back to Share Links
+    </a>
+  </div>
+</div>
+
+<script>
+  function copyShareUrl() {
+    const input = document.getElementById('shareUrl');
+    input.select();
+    document.execCommand('copy');
+    const feedback = document.getElementById('copyFeedback');
+    feedback.style.display = 'block';
+    setTimeout(() => { feedback.style.display = 'none'; }, 3000);
+  }
+</script>
+{% endblock %}
